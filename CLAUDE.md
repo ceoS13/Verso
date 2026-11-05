@@ -8,7 +8,7 @@ Quem decide produto: **Pedro Otávio**.
 - a Parte A é escopo de construção, não régua de paridade;
 - os itens de legado ficam fora.
 
-Ler `docs/decisoes.md` antes de cada etapa.
+Ler `docs/decisoes.md` antes de cada etapa. Plano vigente: `docs/plano/plano-v1.md` (aguardando aprovação do Pedro).
 
 ## Fonte da verdade
 

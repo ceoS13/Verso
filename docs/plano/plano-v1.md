@@ -42,7 +42,7 @@ Cada linha diz o que muda em relação ao PRD, por quê e o que preciso que voc�
 | V8 | 4.26.3 item 2 | O 2FA obrigatório vale para qualquer papel com permissão perigosa, não só Dono e Gerente. | Sem isso, copiar o Gerente para um papel personalizado escapa do 2FA | Ok? |
 | V9 | 4.2 (regra nova) | Ninguém concede um papel, permissão, escopo ou limite maior do que tem. Só o Dono atribui o papel Dono. | O PRD não trata escalada de privilégio | Ok? |
 | V10 | 10.1 (Etapas 2 e 3) | Uma tela mínima de Equipe sobe para a Etapa 1: convidar, dar papel de fábrica e unidades, desativar com perda de acesso na hora (4.2.9 item 2). Papéis personalizados, aprovações e delegação continuam na Etapa 2. | Sem isso, a Etapa 1 não tem como provar as permissões com pessoas reais | Ok? |
-| V11 | 10.1 (Etapa 1) | Entram na Etapa 1 a saída transacional (outbox) e o e-mail transacional. | A Etapa 1 já envia e-mail (recuperação de senha, convite, alerta de login em dispositivo novo), e a regra 21 exige fila e outbox para todo envio | Ok? |
+| V11 | 10.1 (Etapa 1) | Entram na Etapa 1 a fila transacional e o e-mail transacional. A fila transacional cumpre o papel da outbox: o trabalho é gravado na mesma transação do dado. | A Etapa 1 já envia e-mail (recuperação de senha, convite, alerta de login em dispositivo novo), e a regra 21 exige fila e outbox para todo envio | Ok? |
 | V12 | 10.1 (Etapa 2) | A Etapa 2 fica dividida em quatro entregas: 2a configurações, catálogo, clientes e agenda; 2b caixa, comanda, pacotes e estoque; 2c financeiro, comissão, relatórios, notificações, importação e exportação; 2d papéis personalizados, aprovações e delegação. | É a etapa maior. Dividir mantém as entregas pequenas e seguras (regra 7) | Ok? |
 | V13 | 10.1 (dependências) | A Etapa 11 depende também das 2, 5, 8 e 10. A Etapa 12 depende também das 5 e 8. | Agentes e ferramentas usam esses módulos (P6) | Informativo |
 | V14 | 10.1 (liberação) | Proponho um **piloto fechado** logo após a 2b (agenda, clientes, caixa), com 1 ou 2 barbearias amigas e onboarding feito por nós. O primeiro marco vendável é depois das Etapas 3, 4, 6 e 7. | Num sistema novo, quanto antes houver uso real, menos retrabalho | Você tem barbearias para o piloto fechado? |
@@ -84,7 +84,90 @@ Recomendo (a) a partir da Etapa 1. O primeiro código sensível (login e isolame
 
 Esta é a proposta que a Etapa 0 formaliza em registros de decisão técnica (ADR, 4.37.7). Nada aqui vira código antes da sua aprovação.
 
-<<STACK>>
+### 3.1 Visão geral
+
+```
+ Equipe (painel, PWA) ─┐
+ Cliente (página,      ├──▶ apps/web  (Next.js)
+  portal)              ┘        │  RPC tipado, sessão em cookie seguro
+                                ▼
+ Asaas, Meta, Evolution ──▶ apps/api  (Fastify)
+  (webhooks)                     │  autenticação, RPC do painel, webhooks,
+                                 │  e na onda 3 a API pública
+                                 ▼
+                          packages/core   ◀── apps/worker (fila, rotinas, envios, IA)
+                     ações de negócio: permissão + direito do plano +
+                     auditoria + fila transacional  (a "mesma porta", regra 17)
+                                 │
+                                 ▼
+                     PostgreSQL 18  (segurança por linha, trava de horário,
+                                     partições, fila de trabalhos)
+```
+
+O mesmo repositório (monorepo) tem três aplicações e pacotes compartilhados:
+- `core`: ações de negócio;
+- `db`: schema, migrações e acesso com organização;
+- `auth`: login, 2FA e PIN;
+- `permissoes`: catálogo e avaliador;
+- `direitos`: plano do Verso;
+- `i18n`: textos e formatação;
+- `ui`: tokens e componentes;
+- `observabilidade`: logs mascarados e rastreamento;
+- `eventos`: plano de eventos de produto;
+- `testes`: dados fictícios e baterias de isolamento e permissão.
+
+### 3.2 Escolhas
+
+Versões conferidas na pesquisa de 05/11/2026. Cada ADR fixa a versão exata.
+
+| Camada | Escolha | Por quê | Alternativa descartada |
+| --- | --- | --- | --- |
+| Linguagem | TypeScript em tudo. Versão 6.0, com configuração já compatível com a 7 | Tipos compartilhados entre front, back, worker e IA. A 7 (compilador nativo, 8 a 12x mais rápido) ainda não tem a API que o lint usa; troco quando a 7.1 estabilizar | — |
+| Runtime | Node.js 26 LTS (suporte até abr/2029) | LTS ativa desde 28/10/2026 | Node 24, que já está em manutenção |
+| Front | Next.js 16.4 (no mínimo 16.4.5, por causa de falhas de segurança nas anteriores) com React 19.3. Um app com três áreas: painel (tema escuro), página pública e portal (marca da barbearia) | Página pública rápida no 4G com cache (8.12, 4.34.3 item 10), manifesto de PWA nativo, um só design system | Apps separados para painel e página (duplicaria componentes) |
+| API | Fastify, com RPC tipado (tRPC) para o painel | Webhooks respondem em menos de 1 s sem depender do deploy do front (critério da Etapa 4). Escala separada (4.34.3 item 3). A mesma base serve à API pública da onda 3 | Rotas de API dentro do Next.js (misturam o front com receptores críticos) |
+| Banco | PostgreSQL 18, no mínimo 18.6 | Segurança por linha (4.26.2). Trava de horário com `EXCLUDE USING gist` e `tstzrange`, ignorando cancelados (4.5.6). `uuidv7()` nativo, partições por tempo. A 18.6 corrige o CVE-2026-14666, que afetava a segurança por linha | MySQL (sem RLS nem EXCLUDE) |
+| Acesso ao banco | Drizzle ORM 0.45 (no mínimo 0.45.2, por causa de uma injeção de SQL nas anteriores). Migro para a 1.0 quando sair, antes do primeiro dado real | Declara as políticas de segurança por linha no próprio schema e aceita migração em SQL puro para o que nenhum ORM modela (EXCLUDE, FORCE RLS, partições) | Prisma: o 7 não tem RLS nem EXCLUDE no schema, e o 8 ainda é versão candidata, com formato novo |
+| Fila de trabalhos | pg-boss 12, dentro do próprio Postgres, atrás de uma interface própria | O trabalho é gravado **na mesma transação** da mudança de dado, o que já cumpre a saída transacional da 4.34.3 item 6. Os trabalhos entram no backup junto com o resto, e há um serviço a menos para operar. A interface permite trocar por BullMQ com Valkey na Etapa 13, se o teste de carga pedir | BullMQ + Redis desde já. Mais um serviço, e o Redis 8 tem licença AGPL/SSPL; se for preciso, usamos Valkey, que é BSD |
+| Autenticação | Better Auth 1.7 (no mínimo 1.7.7, por causa de falhas de segurança nas anteriores): senha, 2FA TOTP com códigos de recuperação, passkey, verificação de senha vazada, lista e revogação de sessões, limite de tentativas guardado no banco | Cobre a 4.26.3. Papéis e permissões ficam nas nossas tabelas, não no plugin de organização dele, porque o nosso modelo é mais fino | Auth.js (só recebe correções de segurança, e o próprio time recomenda o Better Auth) e Lucia (deprecado) |
+| Validação | Zod | Mesmo formato de entrada no painel, na IA e na API | — |
+| Interface | Tailwind CSS 4 com tokens CSS (`@theme`) e componentes do shadcn/ui sobre Base UI, padrão desde jul/2026 | Componentes acessíveis de base. Tokens num único arquivo (8.8) | Biblioteca de componentes fechada (difícil de seguir os tokens) |
+| Traduções | next-intl 4 (mensagens ICU) | Compatível com o Next 16 e com renderização no servidor. Formatação por organização (4.38) | — |
+| Datas | date-fns com fuso (`@date-fns/tz`) | Tudo em UTC no banco, com conversão no fuso da unidade | — |
+| Telefone | libphonenumber-js com regras brasileiras próprias (nono dígito, código de operadora) | Biblioteca mantida, com versão nova a cada duas semanas | — |
+| Testes | Vitest 5, Testcontainers (Postgres real), Playwright 1.64 com axe-core | Isolamento e permissões testados contra um banco de verdade, e acessibilidade automática (8.9) | Banco simulado (não prova o isolamento) |
+| Observabilidade | OpenTelemetry 3 (traces, métricas e logs estáveis), Sentry com coleta de dados pessoais **desligada** (na v11 ela vem ligada por padrão) | Rastreamento por requisição e por conversa (4.28) sem expor dado pessoal (4.26.10 item 4) | — |
+| Monorepo | pnpm + Turborepo | Builds e testes só do que mudou | — |
+
+### 3.3 Hospedagem: Google Cloud em São Paulo (southamerica-east1)
+
+| Peça | Serviço |
+| --- | --- |
+| Web e API | Cloud Run |
+| Worker (fila e rotinas) | Cloud Run worker pools, para processos longos (disponível desde abr/2026) |
+| Banco | Cloud SQL para PostgreSQL 18, edição Enterprise: recuperação a um ponto no tempo de até 7 dias, mais backups diários com retenção configurável, que ajusto para os 30 dias da 4.28 item 4; extensão btree_gist disponível |
+| Arquivos | Cloud Storage com link assinado de curta duração (4.26.9) |
+| Chave-mestra do cofre | Cloud KMS |
+| Cache, só se precisar | Memorystore Valkey |
+| Borda | CDN e proteção contra abuso na frente da página pública, para cache e limite de requisições (4.26.5). Opções: Cloud CDN com Cloud Armor, ou Cloudflare só como borda. A escolha fica no ADR 002, por custo |
+
+**Por que o Google Cloud:**
+- é o caminho **mais simples com um único fornecedor que atende tudo em São Paulo**: banco com segurança por linha e PITR, worker de longa duração, arquivos com link assinado e serviço de chaves;
+- a AWS também atende, mas exige montar mais peças (rede, balanceador, NAT, permissões), e o serviço mais simples dela (App Runner) fechou para novos clientes;
+- Vercel + Supabase seriam três fornecedores, e a Vercel não roda worker longo;
+- Fly.io é mais barato, mas precisaria da AWS para arquivos e chaves, e a extensão btree_gist não está garantida no banco gerenciado de lá;
+- Render, Railway e Cloudflare R2 não têm região ou dados no Brasil.
+
+**Custo inicial estimado** (sem cotação; os preços de São Paulo não foram confirmados nas páginas oficiais):
+- **Produção: US$ 90 a 170 por mês.** Banco dedicado pequeno US$ 50 a 100, Cloud Run (web, API e worker) US$ 30 a 60, armazenamento e chaves abaixo de US$ 5.
+- **Teste: US$ 30 a 60 por mês.** Banco mínimo e Cloud Run escalando a zero.
+- Na Etapa 0, confirmo os valores na calculadora oficial antes de fechar o ADR 002.
+
+**LGPD.** Hospedar em São Paulo reduz as transferências internacionais, mas não elimina todas: e-mail, monitoramento de erros, WhatsApp e LLM ainda saem do Brasil. As cláusulas-padrão da ANPD (Resolução CD/ANPD 19/2024) são obrigatórias desde 23/08/2025. Todo fornecedor estrangeiro que recebe dado pessoal precisa delas no contrato. Isso entra na revisão jurídica (H13) e na lista pública de suboperadores (4.27.2).
+
+**Duas consequências técnicas que a pesquisa trouxe:**
+1. **A tabela de agendamentos não pode ser particionada por tempo.** No Postgres, uma trava de sobreposição numa tabela particionada só funciona se comparar a chave da partição por igualdade. Por isso particiono por tempo só as tabelas que só recebem inserções, que são justamente as da 4.34.3 item 2: auditoria, eventos, mensagens, uso de IA e transições de agendamento. Se um dia a tabela de agendamentos precisar ser dividida, a divisão é por organização.
+2. **Desligar a coleta automática de dados pessoais no monitoramento de erros** (o padrão do Sentry v11 é ligada) e mascarar logs desde o primeiro commit.
 
 ### 3.4 Como uma ação passa pelo sistema ("a mesma porta", regra 17)
 
@@ -110,7 +193,7 @@ export const desativarMembro = acao({
     await ctx.db.membros.desativar(membroId)
     await ctx.sessoes.encerrarTodasDoUsuario(antes.usuarioId)
     ctx.auditar({ acao: 'membro.desativado', objeto: antes, depois: { ativo: false } })
-    ctx.emitir('membro_desativado', { membroId })        // vai para a outbox, na mesma transação
+    ctx.emitir('membro_desativado', { membroId })        // vai para a fila, na mesma transação
   },
 })
 ```
@@ -119,7 +202,7 @@ O invólucro `acao(...)` faz sempre, nesta ordem:
 1. abre a transação com a organização da sessão;
 2. confere direito do plano, permissão, escopo e limite, e nega por padrão;
 3. executa;
-4. grava a auditoria e a outbox na mesma transação.
+4. grava a auditoria e os trabalhos da fila (envios, integrações) na mesma transação.
 
 Se qualquer passo falhar, nada é gravado.
 
@@ -145,7 +228,7 @@ Se qualquer passo falhar, nada é gravado.
    - 002 hospedagem, regiões e residência de dados;
    - 003 multi-inquilino com segurança por linha no banco;
    - 004 autenticação, 2FA e PIN;
-   - 005 filas, outbox e rotinas;
+   - 005 fila transacional e rotinas;
    - 006 cofre de segredos;
    - 007 i18n e formatação;
    - 008 design system e tokens;
@@ -162,7 +245,7 @@ Se qualquer passo falhar, nada é gravado.
    - você valida a navegação antes da Etapa 1.
 5. **Confirmações de política que o PRD pede na Etapa 0:**
    - política vigente da Meta sobre IA no WhatsApp (4.21.2 item 3);
-   - situação da LGPD sobre transferência internacional, para a escolha de região (ADR 002).
+   - transferência internacional na LGPD: a pesquisa inicial está na seção 4.3; o ADR 002 registra a lista de fornecedores que precisam das cláusulas-padrão.
 6. **Especificação dos dados de teste**: 5 barbearias fictícias, uma por perfil da 10.2. São usadas em todos os testes e demonstrações. Nunca dado real.
 7. **Repositório preparado**: estrutura do monorepo vazia, modelo de PR com checklist (permissão, isolamento, auditoria, i18n, estados de tela), CODEOWNERS para as áreas sensíveis e o pedido de proteção da `main` (H7).
 
@@ -172,7 +255,25 @@ Se qualquer passo falhar, nada é gravado.
 
 ### 4.3 Fontes pesquisadas e decisão
 
-<<FONTES_ETAPA0>>
+Pesquisa técnica de 05/11/2026. A política de rede deste ambiente bloqueou a maior parte dos sites oficiais: nextjs.org, postgresql.org, as páginas da AWS, do Google Cloud, da Vercel, do Fly, do Supabase, do Neon e o gov.br. Os fatos vieram de quatro caminhos: registro do npm (versões, datas e alertas de segurança), código-fonte e documentação oficial no GitHub, nodejs.org, e trechos de páginas oficiais devolvidos pela busca. O que veio só da busca, principalmente preço, fica confirmado na Etapa 0 antes do ADR.
+
+| Tema | O que a pesquisa mostrou | Decisão |
+| --- | --- | --- |
+| Versões e segurança das bibliotecas | Next.js abaixo de 16.4.5, Better Auth abaixo de 1.7.7, Drizzle abaixo de 0.45.2 e PostgreSQL abaixo de 18.6 têm falhas de segurança publicadas. As que afetam o PostgreSQL e o Better Auth atingem justamente a segurança por linha e o 2FA | Versão mínima fixada em cada ADR. O pipeline barra dependência com alerta de segurança (4.26.10 item 2) |
+| ORM | Prisma 7 sem RLS nem EXCLUDE no schema. Prisma 8 ainda é versão candidata. Drizzle declara RLS no schema e aceita SQL puro nas migrações | **Drizzle** (seção 3.2) |
+| Fila | pg-boss 12 é maduro e roda no Postgres. BullMQ 6 ganhou um backend Postgres há só 3 meses. Redis 8 tem licença AGPL/SSPL; Valkey é BSD | **pg-boss** agora, com troca possível na Etapa 13 |
+| Autenticação | Better Auth cobre TOTP, passkey, senha vazada, sessões e limite de tentativas. Auth.js só recebe correções e Lucia está deprecado | **Better Auth** |
+| Trava de horário | O Postgres confirma `btree_gist` + `EXCLUDE` como o caminho recomendado. A forma nova (`WITHOUT OVERLAPS`) não aceita condição para ignorar cancelados | **EXCLUDE com condição** só nos estados ativos (4.5.6) |
+| Hospedagem | Neon, Supabase e Fly têm banco em São Paulo, mas só o Google Cloud e a AWS entregam, num único fornecedor, banco, worker de longa duração, arquivos e serviço de chaves em São Paulo. Render, Railway e R2 não têm região no Brasil. O App Runner da AWS fechou para novos clientes | **Google Cloud em São Paulo** (seção 3.3) |
+| LGPD | Cláusulas-padrão da ANPD obrigatórias para transferência internacional desde 23/08/2025 | Entra na revisão jurídica (H13) e no ADR 002 |
+
+**Pesquisas que ficam para a execução da Etapa 0:**
+1. Política vigente da Meta sobre IA no WhatsApp (4.21.2 item 3).
+2. Provedor de e-mail transacional com cláusulas-padrão da ANPD (H4).
+3. Preços oficiais de São Paulo na calculadora do Google Cloud.
+4. Revisão dos alertas de segurança das versões escolhidas.
+
+Para que eu leia as fontes oficiais direto, vale liberar os domínios acima nas configurações de rede do ambiente.
 
 ### 4.4 Riscos
 
@@ -201,7 +302,7 @@ Se qualquer passo falhar, nada é gravado.
 
 **1a. Repositório, pipeline e observabilidade**
 - Monorepo com `apps/web`, `apps/api` e `apps/worker`, e os pacotes da seção 3.
-- Ambiente local com um comando (banco, fila, e-mail de teste).
+- Ambiente local com um comando (banco, que também guarda a fila, e e-mail de teste).
 - Pipeline obrigatório (4.37), com todas as verificações abaixo bloqueando o merge:
   - verificação de tipos e lint sem avisos;
   - testes unitários e de integração com banco real em container;
@@ -215,7 +316,7 @@ Se qualquer passo falhar, nada é gravado.
 - Captura de erros e endpoints de saúde.
 - Ambientes de desenvolvimento, teste e produção (4.37 item 1).
 
-**1b. Banco multi-inquilino, auditoria, outbox, flags e fuso**
+**1b. Banco multi-inquilino, auditoria, fila transacional, flags e fuso**
 - `organizacao` e `unidade` (4.31.1). Toda barbearia nasce como 1 organização + 1 unidade.
 - Isolamento em três camadas (4.26.2):
   1. **segurança por linha no banco**: política em toda tabela, ligada e forçada, e um usuário de aplicação que não consegue contorná-la;
@@ -223,7 +324,7 @@ Se qualquer passo falhar, nada é gravado.
   3. **chaves estrangeiras compostas com `organizacao_id`**: um registro da barbearia A não consegue apontar para um da B, nem por engano.
 - A organização da requisição vem só da sessão (4.26.2 item 2). Sem organização definida, o banco devolve zero linhas: falha fechada.
 - `auditoria`: só inserção. O usuário da aplicação não tem permissão de alterar nem apagar, e um gatilho no banco reforça isso. Particionada por mês (4.26.11, 4.34.3 item 2).
-- `outbox` com processador no worker: toda mensagem ou integração sai daqui (4.34.3 item 6).
+- Fila transacional (pg-boss) com processador no worker. Toda mensagem ou integração sai daqui, gravada na mesma transação do dado (4.34.3 item 6). Há uma fila por tipo de trabalho desde já (4.34.3 item 3).
 - `flag` e `flag_atribuicao`: por organização, grupo ou percentual, com dono e data de remoção. O pipeline avisa quando uma flag passa da data (4.37 item 3).
 - Fuso: cada unidade tem fuso IANA, sugerido pela UF do endereço e editável (4.1). Funções únicas de "dia local", "agora" e "amanhã às 10h" no fuso da unidade. Relógio injetável nos testes.
 
@@ -239,7 +340,7 @@ Se qualquer passo falhar, nada é gravado.
   - "Minha conta" lista as sessões ativas, com "encerrar";
   - troca de senha, e-mail, telefone ou papel encerra as outras sessões.
 - PIN de 6 dígitos para ações críticas: diferente da senha, guardado com hash forte, bloqueado após 5 erros. O desbloqueio exige senha e 2FA.
-- Recuperação de senha por e-mail e convite por link de uso único com validade de 7 dias (4.30 item 4). Os dois saem pela outbox.
+- Recuperação de senha por e-mail e convite por link de uso único com validade de 7 dias (4.30 item 4). Os dois saem pela fila transacional.
 
 **1d. Permissões, direitos do plano e equipe mínima**
 - Catálogo de permissões no código (`modulo.recurso.acao`), versionado. Cada entrada traz:
@@ -319,7 +420,7 @@ Todas com `organizacao_id`, exceto as marcadas como globais. Também têm `criad
 | uso_limite | chave, período, usado | Igual |
 | flag (global), flag_atribuicao | Como no Anexo A | Igual |
 | auditoria | autor_tipo, autor_id, a_pedido_de, ação, objeto, antes, depois, canal, IP, id da requisição | **Novo:** `a_pedido_de` (para "Verso IA a pedido de X") e id da requisição |
-| outbox | tipo, payload, criado_em, processado_em, tentativas, erro | **Novo:** não estava no Anexo A |
+| tabelas da fila (pg-boss) | trabalho, fila, estado, tentativas, agendado_para | **Novo:** fazem o papel da outbox. Como são tabelas internas da biblioteca, cada trabalho leva o `organizacao_id` no conteúdo, e o processador abre a transação com essa organização. O conteúdo leva só ids, nunca dado pessoal. O teste de isolamento do catálogo trata o schema da fila como exceção declarada |
 | evento_produto | Como no Anexo A | Particionada por mês |
 | credencial | tipo, conteúdo cifrado, versão da chave, últimos 4 | **Novo:** guarda o que o Anexo A chama de `credencial_ref` |
 | acesso_suporte | Como no Anexo A | Igual |
@@ -383,7 +484,7 @@ Fontes principais:
 8. **Telefone:** uma bateria de formatos brasileiros normaliza para o mesmo número; dois cadastros com o mesmo telefone são recusados pelo banco.
 9. **Fuso:** "amanhã às 10h" resolvido em São Paulo, Manaus e Fernando de Noronha, e também num fuso com horário de verão, para o caso de ele voltar.
 10. **Interface:** acessibilidade automática sem violações nas telas da Etapa 1; teste de contraste dos tokens; teste de ponta a ponta de login com 2FA, troca de barbearia e tela sem permissão.
-11. **Outbox:** se a transação falha, nada é enviado; se é gravada, o envio acontece uma vez, mesmo com o worker reiniciando.
+11. **Fila transacional:** se a transação falha, nada é enviado. Se é gravada, o envio acontece uma vez, mesmo com o worker reiniciando, porque o processador é idempotente.
 
 ### 5.6 Critério de aceite da Etapa 1
 
