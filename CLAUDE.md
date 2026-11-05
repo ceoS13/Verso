@@ -8,7 +8,12 @@ Quem decide produto: **Pedro Otávio**.
 - a Parte A é escopo de construção, não régua de paridade;
 - os itens de legado ficam fora.
 
-Ler `docs/decisoes.md` antes de cada etapa. Plano vigente: `docs/plano/plano-v1.md` (aguardando aprovação do Pedro).
+Ler `docs/decisoes.md` antes de cada etapa. Plano vigente: `docs/plano/plano-v1.md` (v1.1, aguardando aprovação do Pedro).
+
+**Verso atual como referência (E7).** O sistema em produção (`sauleromorales/Verso-Studio`, versostudio.com.br) é a referência de funcionalidades, regras e dados.
+- Antes de cada etapa, consultar `docs/inventario-verso-atual.md` e o código do repositório de referência para a funcionalidade correspondente.
+- Nada do que existe lá pode sumir (regra 5).
+- O código de lá não é copiado, e o visual muda para o estilo Apple (E8).
 
 ## Fonte da verdade
 
