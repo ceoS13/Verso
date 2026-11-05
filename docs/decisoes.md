@@ -17,6 +17,8 @@ Status: **Aberta** (precisa do Pedro) · **Decidida** · **Para o plano** (entra
 | E5 | 05/11/2026 | Divergências V2 a V16 do plano v1 **aceitas como propostas**. O Pedro pediu "arruma as divergências". Ajustes por causa de E7: V5 (a tela de mesclagem entra junto com a migração dos dados atuais), V14 (o piloto fechado sai de barbearias que já usam o Verso atual) e a parte de identidade visual de V4 (substituída por E8). |
 | E6 | 05/11/2026 | **O Pedro é o revisor humano** dos PRs sensíveis (H6): login, permissões, isolamento, pagamentos, webhooks e IA. Cada PR sensível traz um roteiro de revisão em linguagem simples: o que mudou, o que conferir e a prova dos testes. |
 | E7 | 05/11/2026 | **Existe um Verso atual, em produção:** `sauleromorales/Verso-Studio`, no ar em versostudio.com.br. O sistema novo é uma reconstrução que **usa o atual como referência e pode mudar tudo**. Isso refina E1: o código não é reaproveitado, mas o que existe hoje (funcionalidades, regras e dados das barbearias) entra no plano. Inventário do sistema atual em `docs/inventario-verso-atual.md`. |
+| E9 | 05/11/2026 | **Matriz de papéis de fábrica aprovada** ("ok nos 5"): desconto de até 20% para o Gerente e 10% para a Recepcionista, vale de até R$ 200 para o Gerente; Barbeiro sem ver o telefone do cliente; nova permissão `clube.assinaturas.vender`; exportar relatórios só para Dono e Financeiro; 2FA obrigatório para qualquer papel com permissão perigosa. |
+| E10 | 05/11/2026 | **Sem piloto fechado.** O Verso atual já foi usado e aprovado pelas barbearias, então a liberação é direta. Continuam valendo, porque são proteção e não piloto: o ensaio da migração com cópia anonimizada antes da virada, as flags por barbearia como interruptor, e a liberação gradual da Verso IA (4.23, camada 12). |
 | E8 | 05/11/2026 | **Design no estilo Apple**, inspirado nas Human Interface Guidelines. Substitui o "tema escuro com destaque âmbar" do perfil 0.2 e da 8.8 do PRD. Proposta de aplicação na seção "Identidade visual" abaixo. Continuam valendo as regras de UX da seção 8 do PRD: uma ação por tela, cliques, estados, acessibilidade AA. |
 
 ---
@@ -38,7 +40,7 @@ O que "estilo Apple" quer dizer no Verso. Isto vira o ADR 008 e os tokens da Eta
 8. **Ícones** lineares e consistentes. A licença dos SF Symbols proíbe o uso na web, então a base é o Lucide, que o Verso atual já usa, em traço fino.
 9. **O PRD continua valendo**: contraste AA, estados padrão, limite de cliques, desempenho e texto sempre com cor.
 
-Pendente: cor exata do laranja e arquivo do logo, a partir do inventário do Verso atual (pasta `studio/` com os favicons).
+Cor e logo, a partir do inventário: o destaque é o laranja da marca `#FF7A1A` (símbolo em "V", pasta `studio/` do Verso atual), e não o âmbar `#F59E0B` que a interface atual usa. Texto branco sobre `#FF7A1A` não passa no contraste AA. Por isso o botão laranja usa rótulo escuro (`#1C0E0C`, o tom escuro da marca), e os textos e links laranja usam um tom mais fechado, calculado no ADR 008.
 
 ---
 

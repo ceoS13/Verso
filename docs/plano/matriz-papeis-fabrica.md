@@ -1,4 +1,6 @@
-# Matriz dos papéis de fábrica (rascunho para validação)
+# Matriz dos papéis de fábrica
+
+**Aprovada pelo Pedro em 05/11/2026 (E9).** Os 5 pontos de validação do fim do arquivo estão aceitos.
 
 Anexo do plano v1, entrega da Etapa 1. A matriz parte do resumo de cada papel na 4.2.2 e do catálogo base da 4.2.4 do PRD. Onde o PRD não define, a célula é proposta minha e está marcada com **(p)**.
 

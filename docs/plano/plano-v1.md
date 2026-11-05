@@ -1,6 +1,13 @@
 # Plano de implementação v1: Etapas 0 e 1 detalhadas
 
-05/11/2026 · Status: **aguardando aprovação do Pedro** · Base: PRD v3 (`docs/prd/verso-2.0-prd-v3.md`) + decisões E1 a E4 (`docs/decisoes.md`)
+05/11/2026 · Versão 1.1 · Status: **aguardando aprovação do Pedro** · Base: PRD v3 (`docs/prd/verso-2.0-prd-v3.md`) + decisões E1 a E10 (`docs/decisoes.md`) + inventário do Verso atual (`docs/inventario-verso-atual.md`)
+
+Na versão 1.1:
+- divergências V2 a V16 aceitas (E5);
+- matriz de papéis aprovada (E9);
+- plano ajustado ao Verso atual em produção (E7), ao estilo Apple (E8) e à liberação sem piloto fechado (E10);
+- novas divergências V17 a V21;
+- nova Etapa M, de migração e virada.
 
 Formato da seção 10.3 do PRD:
 - no topo, as divergências e os pré-requisitos humanos;
@@ -19,35 +26,38 @@ Anexo: `docs/plano/matriz-papeis-fabrica.md` (papéis de fábrica × permissões
   - um teste técnico descartável para provar as três partes mais arriscadas (isolamento entre barbearias no banco, login com 2FA por papel, trava de horário duplicado);
   - protótipo clicável da navegação para você validar.
 - **Etapa 1 (plataforma):** tudo o que é caro de mudar depois. Organização e unidade, isolamento testado, permissões com os 6 papéis, direitos do plano como dados, login com 2FA, PIN, auditoria, cofre de segredos, flags, fuso, telefone normalizado, traduções, design system e pipeline. Ao final você entra no Verso, convida uma pessoa, dá um papel e vê o que ela pode e não pode fazer. Ainda não há agenda nem caixa: isso começa na Etapa 2.
-- **O que eu preciso de você agora:**
-  1. aprovar ou ajustar as divergências da seção 1;
-  2. resolver os pré-requisitos H2 a H7 da seção 2 (conta de nuvem, domínio, e-mail, logo, revisor de código, GitHub);
-  3. validar a matriz de papéis.
+- **Etapa M (migração e virada):** traz as barbearias que usam o Verso atual para o sistema novo sem perder histórico, mantendo os links que elas já divulgaram.
+- **O que ainda falta de você:** decidir a hospedagem (H2), o e-mail (H4), o GitHub (H7) e o dump do banco atual (H17). Divergências, matriz, revisor, domínio e logo já estão resolvidos.
 
 ---
 
 ## 1. Divergências do PRD
 
-Cada linha diz o que muda em relação ao PRD, por quê e o que preciso que você responda. As pendências P2 a P7 do `decisoes.md` continuam valendo e entram no plano das etapas delas.
+Cada linha diz o que muda em relação ao PRD, por quê e o status da decisão. As pendências P2 a P7 do `decisoes.md` continuam valendo e entram no plano das etapas delas.
 
-| # | Onde no PRD | O que muda | Motivo | Pergunta para o Pedro |
+| # | Onde no PRD | O que muda | Motivo | Status |
 | --- | --- | --- | --- | --- |
-| V1 | 0.1, 10.1 (Etapa 0) | A Etapa 0 vira a fundação: stack, arquitetura, teste técnico e protótipo. Não há inventário de código. | Projeto do zero (E1) | Decidida |
-| V2 | 10.2, critério geral 1 ("com a flag desligada, funciona exatamente como hoje") | Passa a valer assim: com a flag desligada, o módulo não aparece e nada do que já foi entregue muda de comportamento. Teste automatizado continua obrigatório. | Não existe "hoje" para preservar | Ok? |
-| V3 | Regra 5 e 8.15 (renomear "Planos" e "Funcionários") | Como não há menu antigo, os nomes já nascem **Clube** e **Equipe**, como na navegação da 8.3. | Sem legado para preservar | Ok? |
-| V4 | 0.2 e 8.8 (tokens "extraídos do código") | Os tokens são definidos do zero sobre a identidade descrita: tema escuro, destaque âmbar, logo quadrado laranja com "V". | Não há código | Você tem o logo em arquivo (SVG ou PNG grande) e o código da cor? Sem isso, faço um provisório. |
-| V5 | 10.1, Etapa 1 ("telefone normalizado e mesclagem") | Na Etapa 1 entram a normalização, a restrição única no banco e a função de mesclar com desfazer em 7 dias, testada. A **tela** de mesclagem vai para a Etapa 2, junto com Clientes e a importação, que é de onde vêm os duplicados num sistema novo. | Sem clientes antigos, não há duplicados para revisar na Etapa 1 | Ok? |
-| V6 | 10.2, Etapa 1 ("cada permissão do catálogo tem teste que nega sem ela e permite com ela") | Na Etapa 1, o teste é feito no avaliador para todas as permissões. O teste na rota entra na etapa que cria cada rota, e o pipeline barra rota sem teste. | Na Etapa 1, a maior parte das rotas ainda não existe | Ok? |
-| V7 | 4.26.3 item 2 (2FA por app autenticador ou código pelo WhatsApp do número central) | Até a Etapa 6, o 2FA é só por app autenticador, com códigos de recuperação. O código pelo WhatsApp chega com o número central do Verso. Proponho oferecer também chave de acesso (passkey), que é mais forte e mais fácil no celular. | O número central só existe na Etapa 6 | Ok obrigar app autenticador (Google Authenticator e afins) para Dono e Gerente até lá? |
-| V8 | 4.26.3 item 2 | O 2FA obrigatório vale para qualquer papel com permissão perigosa, não só Dono e Gerente. | Sem isso, copiar o Gerente para um papel personalizado escapa do 2FA | Ok? |
-| V9 | 4.2 (regra nova) | Ninguém concede um papel, permissão, escopo ou limite maior do que tem. Só o Dono atribui o papel Dono. | O PRD não trata escalada de privilégio | Ok? |
-| V10 | 10.1 (Etapas 2 e 3) | Uma tela mínima de Equipe sobe para a Etapa 1: convidar, dar papel de fábrica e unidades, desativar com perda de acesso na hora (4.2.9 item 2). Papéis personalizados, aprovações e delegação continuam na Etapa 2. | Sem isso, a Etapa 1 não tem como provar as permissões com pessoas reais | Ok? |
-| V11 | 10.1 (Etapa 1) | Entram na Etapa 1 a fila transacional e o e-mail transacional. A fila transacional cumpre o papel da outbox: o trabalho é gravado na mesma transação do dado. | A Etapa 1 já envia e-mail (recuperação de senha, convite, alerta de login em dispositivo novo), e a regra 21 exige fila e outbox para todo envio | Ok? |
-| V12 | 10.1 (Etapa 2) | A Etapa 2 fica dividida em quatro entregas: 2a configurações, catálogo, clientes e agenda; 2b caixa, comanda, pacotes e estoque; 2c financeiro, comissão, relatórios, notificações, importação e exportação; 2d papéis personalizados, aprovações e delegação. | É a etapa maior. Dividir mantém as entregas pequenas e seguras (regra 7) | Ok? |
-| V13 | 10.1 (dependências) | A Etapa 11 depende também das 2, 5, 8 e 10. A Etapa 12 depende também das 5 e 8. | Agentes e ferramentas usam esses módulos (P6) | Informativo |
-| V14 | 10.1 (liberação) | Proponho um **piloto fechado** logo após a 2b (agenda, clientes, caixa), com 1 ou 2 barbearias amigas e onboarding feito por nós. O primeiro marco vendável é depois das Etapas 3, 4, 6 e 7. | Num sistema novo, quanto antes houver uso real, menos retrabalho | Você tem barbearias para o piloto fechado? |
-| V15 | 4.2.4 (catálogo) | Nova permissão `clube.assinaturas.vender`. Exportar relatórios começa só no Dono e no Financeiro. | Detalhes na matriz anexa | Ok? |
-| V16 | 0.3 e 4.2.2 ("Recepção" com dois sentidos, P4) | O papel do balcão passa a se chamar **Recepcionista**. "Recepção" fica para a IA. | Evita confusão na tela | Ok? |
+| V1 | 0.1, 10.1 (Etapa 0) | A Etapa 0 vira a fundação: stack, arquitetura, teste técnico e protótipo. Não há inventário de código. | Projeto do zero (E1) | Decidida (E1, refinada por E7) |
+| V2 | 10.2, critério geral 1 ("com a flag desligada, funciona exatamente como hoje") | Passa a valer assim: com a flag desligada, o módulo não aparece e nada do que já foi entregue muda de comportamento. Teste automatizado continua obrigatório. | As barbearias atuais continuam no Verso atual até a virada (Etapa M). Para elas, o "como hoje" é garantido pelo sistema atual | Aceita (E5) |
+| V3 | Regra 5 e 8.15 (renomear "Planos" e "Funcionários") | Os nomes já nascem **Clube** e **Equipe**, como na navegação da 8.3. | Na virada, as barbearias atuais recebem um aviso dentro do produto explicando os nomes novos (10.1: nunca mudança silenciosa) | Aceita (E5) |
+| V4 | 0.2 e 8.8 (tokens "extraídos do código") | Os tokens são definidos de novo no estilo Apple (V18), partindo da marca atual: laranja `#FF7A1A` e o símbolo em "V" da pasta `studio/` do Verso atual. | Reconstrução com novo visual (E8) | Aceita (E5, ajustada por E8) |
+| V5 | 10.1, Etapa 1 ("telefone normalizado e mesclagem") | Na Etapa 1 entram a normalização, a restrição única no banco e a função de mesclar com desfazer em 7 dias, testada. A **tela** de mesclagem vai para a Etapa 2a, e é usada na migração dos clientes atuais (Etapa M), que é de onde vêm os duplicados. | Os duplicados aparecem quando os dados atuais forem importados | Aceita (E5, ajustada por E7) |
+| V6 | 10.2, Etapa 1 ("cada permissão do catálogo tem teste que nega sem ela e permite com ela") | Na Etapa 1, o teste é feito no avaliador para todas as permissões. O teste na rota entra na etapa que cria cada rota, e o pipeline barra rota sem teste. | Na Etapa 1, a maior parte das rotas ainda não existe | Aceita (E5) |
+| V7 | 4.26.3 item 2 (2FA por app autenticador ou código pelo WhatsApp do número central) | Até a Etapa 6, o 2FA é só por app autenticador, com códigos de recuperação. O código pelo WhatsApp chega com o número central do Verso. Proponho oferecer também chave de acesso (passkey), que é mais forte e mais fácil no celular. | O número central só existe na Etapa 6 | Aceita (E5) |
+| V8 | 4.26.3 item 2 | O 2FA obrigatório vale para qualquer papel com permissão perigosa, não só Dono e Gerente. | Sem isso, copiar o Gerente para um papel personalizado escapa do 2FA | Aceita (E5) |
+| V9 | 4.2 (regra nova) | Ninguém concede um papel, permissão, escopo ou limite maior do que tem. Só o Dono atribui o papel Dono. | O PRD não trata escalada de privilégio | Aceita (E5) |
+| V10 | 10.1 (Etapas 2 e 3) | Uma tela mínima de Equipe sobe para a Etapa 1: convidar, dar papel de fábrica e unidades, desativar com perda de acesso na hora (4.2.9 item 2). Papéis personalizados, aprovações e delegação continuam na Etapa 2. | Sem isso, a Etapa 1 não tem como provar as permissões com pessoas reais | Aceita (E5) |
+| V11 | 10.1 (Etapa 1) | Entram na Etapa 1 a fila transacional e o e-mail transacional. A fila transacional cumpre o papel da outbox: o trabalho é gravado na mesma transação do dado. | A Etapa 1 já envia e-mail (recuperação de senha, convite, alerta de login em dispositivo novo), e a regra 21 exige fila e outbox para todo envio | Aceita (E5) |
+| V12 | 10.1 (Etapa 2) | A Etapa 2 fica dividida em quatro entregas: 2a configurações, catálogo, clientes e agenda; 2b caixa, comanda, pacotes e estoque; 2c financeiro, comissão, relatórios, notificações, importação e exportação; 2d papéis personalizados, aprovações e delegação. | É a etapa maior. Dividir mantém as entregas pequenas e seguras (regra 7) | Aceita (E5) |
+| V13 | 10.1 (dependências) | A Etapa 11 depende também das 2, 5, 8 e 10. A Etapa 12 depende também das 5 e 8. | Agentes e ferramentas usam esses módulos (P6) | Aceita (E5) |
+| V14 | 10.1 (liberação por barbearias piloto) | **Sem piloto fechado.** Cada etapa é liberada direto, depois de passar nos critérios de aceite. Continuam valendo: (a) o ensaio da migração com cópia anonimizada antes da virada (Etapa M), que protege os dados e não é um piloto; (b) as flags por barbearia, como interruptor de segurança; (c) a liberação gradual da Verso IA (4.23, camada 12), que é uma camada de proteção | O Verso atual já foi usado e aprovado pelas barbearias (E10) | Decidida (E10) |
+| V15 | 4.2.4 (catálogo) | Nova permissão `clube.assinaturas.vender`. Exportar relatórios começa só no Dono e no Financeiro. | Detalhes na matriz anexa | Aceita (E5) |
+| V16 | 0.3 e 4.2.2 ("Recepção" com dois sentidos, P4) | O papel do balcão passa a se chamar **Recepcionista**. "Recepção" fica para a IA. | Evita confusão na tela | Aceita (E5) |
+| V17 | 0.1 e 10.1 | O Verso atual em produção é referência e fonte de dados. A Etapa 0 inclui o inventário (feito: `docs/inventario-verso-atual.md`) e o desenho da migração. Nova **Etapa M**: migração e virada das barbearias atuais | Existe sistema em produção, com dados reais (E7) | Decidida (E7) |
+| V18 | 0.2 e 8.8 (tema escuro, destaque âmbar) | **Estilo Apple**: claro e escuro seguindo o aparelho, o laranja da marca `#FF7A1A` como única cor de destaque, tipografia do sistema, listas agrupadas, painéis que sobem de baixo no celular. Detalhes em `docs/decisoes.md` | Pedido do Pedro (E8) | Decidida (E8) |
+| V19 | 4.19.1 (padrão de URL "a confirmar") | Mantém o padrão atual: `versostudio.com.br/<slug>` para a página, e o link mágico `/agendamento/<token>` continua abrindo | Não quebrar links e QR Codes que as barbearias já divulgaram | Decidida (consequência de E7) |
+| V20 | Regra 5 | Funcionalidades atuais que o PRD não cita ganham lugar: **Preços e metas** (custo-hora, preço ideal, metas, despesas) no Financeiro; link mágico do agendamento; quadro ao vivo e ações em lote na agenda; impressão do caixa | Nada do que existe hoje pode sumir | Decidida (regra 5) |
+| V21 | 4.11 e seção 6 | Métricas atuais com fórmula diferente da seção 6 mudam para a fórmula do PRD, com **relatório de impacto por barbearia** (valor antigo, novo e motivo) entregue na virada. Exemplos: faturamento pela data do lançamento em vez do recebimento, ticket médio por lançamento em vez de por comanda, "hoje" em UTC em vez do fuso da barbearia | Regra do PRD para métricas com o mesmo nome e fórmulas diferentes | Decidida (regra 4.11) |
 
 ---
 
@@ -56,27 +66,25 @@ Cada linha diz o que muda em relação ao PRD, por quê e o que preciso que voc�
 | # | O quê | Responsável | Bloqueia | Observação |
 | --- | --- | --- | --- | --- |
 | H1 | Aprovar este plano, as divergências da seção 1 e a matriz de papéis | Pedro | Tudo | — |
-| H2 | Conta na nuvem escolhida (seção 3.3), com forma de pagamento | Pedro | Ambiente de teste da Etapa 1. O desenvolvimento local não depende disso | Custo inicial estimado na seção 3.3 |
-| H3 | Domínio do Verso e padrão de endereço das páginas das barbearias (ex.: `verso.app/b/nome` ou `nome.verso.app`) | Pedro | Etapa 1 (e-mail e ambiente de teste); Etapa 7 (páginas) | O padrão de URL estava "a confirmar" na 4.19.1 |
+| H2 | **Aberta.** Hospedagem: Google Cloud em São Paulo (proposta da seção 3.3) ou continuar na VPS da Hostinger de hoje. Depois, a conta com forma de pagamento | Pedro | Ambiente de teste da Etapa 1. O desenvolvimento local não depende disso | Hoje a VPS é compartilhada com outros dois apps e o backup fica na própria VPS |
+| H3 | **Resolvido:** `versostudio.com.br`, com o padrão atual `/<slug>` (V19). Falta só o acesso ao DNS na hora de configurar | Pedro | Etapa 1 | — |
 | H4 | Conta num provedor de e-mail transacional e acesso ao DNS do domínio | Pedro (eu configuro) | Etapa 1 | Para recuperação de senha, convites e alertas |
-| H5 | Logo em arquivo e cor de destaque | Pedro | Etapa 1 (tokens) | Sem isso, sigo com um provisório |
-| H6 | **Revisor humano de código** nas áreas sensíveis: login, permissões, isolamento, pagamentos, webhooks, IA (4.37.6) | Pedro decide quem | Primeiro PR sensível, na Etapa 1 | Ver a nota abaixo da tabela |
+| H5 | **Resolvido:** logo e cor `#FF7A1A` na pasta `studio/` do Verso atual | — | — | — |
+| H6 | **Resolvido:** o Pedro revisa os PRs sensíveis (E6), com roteiro de revisão em cada um | — | — | — |
 | H7 | GitHub: Actions ativas, proteção da `main` (merge só por PR com checks verdes), Dependabot, segredos do repositório | Pedro (eu digo exatamente o que ligar) | Etapa 1 | — |
 | H8 | Conta de monitoramento de erros e de logs | Pedro | Etapa 1 | O plano gratuito serve no começo |
-| H9 | Asaas: conta do próprio Verso (para cobrar as barbearias) e acesso ao sandbox | Pedro | Etapas 3 e 4 | D6 pendente: conta própria de cada barbearia ou subcontas |
+| H9 | Asaas: a conta do Verso já existe (cobra as barbearias hoje). Falta o acesso ao sandbox | Pedro | Etapas 3 e 4 | D6 pendente: conta própria de cada barbearia ou subcontas |
 | H10 | Meta: portfólio de negócios verificado e número central do Verso | Pedro | Etapa 6 | **Começar cedo**: a verificação da Meta pode levar semanas. D13 pendente |
-| H11 | Servidor para a Evolution API | Pedro (eu configuro) | Etapa 6 | — |
+| H11 | Evolution API: já existe uma instância para os lembretes atuais. Falta decidir se ela continua ou se sobe uma nova, com uma instância isolada por barbearia (5.3) | Pedro | Etapa 6 | — |
 | H12 | Contas no provedor de LLM e no de transcrição | Pedro | Etapa 11 | Provedores a definir (10.4) |
 | H13 | Revisão jurídica: termos de uso, política de privacidade, contrato de tratamento de dados, termo do clube, consentimento de menores, aviso de risco | Pedro + advogado | Liberação das Etapas 5, 6 e 7 | Pode começar em paralelo, com os modelos do Anexo C |
-| H14 | Barbearias piloto nos 5 perfis da 10.2, e 5 donos ou recepcionistas mais 5 barbeiros para os testes de uso da 8.14 | Pedro | Liberação de cada etapa a partir da 2 | — |
+| H14 | Sem piloto fechado (E10). Os testes de uso da 8.14, com 5 donos ou recepcionistas e 5 barbeiros, ficam opcionais | Pedro | — | Recomendo pelo menos 2 barbeiros testando o fluxo do celular antes da virada |
 | H15 | Decisões em aberto D6, D11, D12 e D13 | Pedro | Etapas 3, 4, 6 e 11 | — |
 | H16 | Teste de intrusão externo | Pedro | Liberação geral da Recepção (Etapas 12 e 13) | — |
+| H17 | Dump do banco de produção do Verso atual (`barbershop_master`), para montar e ensaiar a migração. Anonimizado antes de ir para o ambiente de teste (4.26.10 item 5) | Pedro | Etapa M | O próprio servidor tem o script de backup |
+| H18 | Lista das barbearias que usam o Verso hoje e um contato em cada uma, para avisar da virada | Pedro | Etapa M | — |
 
-**Nota sobre H6.** O PRD exige revisão de código obrigatória nas áreas sensíveis. Hoje o time somos eu, que escrevo o código, e você, que decide produto. As opções:
-- (a) contratar um dev sênior ou consultor de segurança para revisar só os PRs sensíveis, algumas horas por semana;
-- (b) aceitar revisão automatizada (testes, análise estática, revisão por IA independente) mais a sua revisão funcional, com teste de intrusão antes de abrir para o público.
-
-Recomendo (a) a partir da Etapa 1. O primeiro código sensível (login e isolamento) é exatamente onde um erro custa mais.
+**Nota sobre H6.** O Pedro é o revisor (E6). Cada PR sensível traz um roteiro curto: o que mudou em linguagem simples, o que conferir na tela e a prova dos testes de isolamento e permissão. O teste de intrusão externo (H16) continua antes de abrir a Recepção para todo mundo.
 
 ---
 
@@ -150,6 +158,8 @@ Versões conferidas na pesquisa de 05/11/2026. Cada ADR fixa a versão exata.
 | Chave-mestra do cofre | Cloud KMS |
 | Cache, só se precisar | Memorystore Valkey |
 | Borda | CDN e proteção contra abuso na frente da página pública, para cache e limite de requisições (4.26.5). Opções: Cloud CDN com Cloud Armor, ou Cloudflare só como borda. A escolha fica no ADR 002, por custo |
+
+**Hoje** o Verso roda numa VPS da Hostinger, compartilhada com outros dois apps. É uma instância só, e o backup fica na própria VPS. Continuar nela é possível, mas faltam banco gerenciado com recuperação a um ponto no tempo, serviço de chaves e escala separada para o worker (4.34). A decisão é sua (H2).
 
 **Por que o Google Cloud:**
 - é o caminho **mais simples com um único fornecedor que atende tudo em São Paulo**: banco com segurança por linha e PITR, worker de longa duração, arquivos com link assinado e serviço de chaves;
@@ -247,7 +257,13 @@ Se qualquer passo falhar, nada é gravado.
    - política vigente da Meta sobre IA no WhatsApp (4.21.2 item 3);
    - transferência internacional na LGPD: a pesquisa inicial está na seção 4.3; o ADR 002 registra a lista de fornecedores que precisam das cláusulas-padrão.
 6. **Especificação dos dados de teste**: 5 barbearias fictícias, uma por perfil da 10.2. São usadas em todos os testes e demonstrações. Nunca dado real.
-7. **Repositório preparado**: estrutura do monorepo vazia, modelo de PR com checklist (permissão, isolamento, auditoria, i18n, estados de tela), CODEOWNERS para as áreas sensíveis e o pedido de proteção da `main` (H7).
+7. **Inventário do Verso atual e desenho da migração.** O inventário está feito (`docs/inventario-verso-atual.md`). O desenho da migração entra em `docs/migracao.md`:
+   - mapa de dados do esquema atual para o novo, tabela por tabela;
+   - regras de conversão: estados de agendamento; comissão em % no funcionário e em fração no serviço; normalização de telefone; assinaturas do clube como legado (4.13.7);
+   - senhas: o hash atual (bcrypt) é aceito no primeiro login e trocado pelo novo, sem forçar ninguém a criar senha;
+   - roteiro de virada por barbearia: congelar, importar, conferir, redirecionar;
+   - lista de verificação dos totais (clientes, agendamentos, comissões, saldos) antes e depois.
+8. **Repositório preparado**: estrutura do monorepo vazia, modelo de PR com checklist (permissão, isolamento, auditoria, i18n, estados de tela), CODEOWNERS para as áreas sensíveis e o pedido de proteção da `main` (H7).
 
 ### 4.2 Arquivos
 
@@ -266,6 +282,7 @@ Pesquisa técnica de 05/11/2026. A política de rede deste ambiente bloqueou a m
 | Trava de horário | O Postgres confirma `btree_gist` + `EXCLUDE` como o caminho recomendado. A forma nova (`WITHOUT OVERLAPS`) não aceita condição para ignorar cancelados | **EXCLUDE com condição** só nos estados ativos (4.5.6) |
 | Hospedagem | Neon, Supabase e Fly têm banco em São Paulo, mas só o Google Cloud e a AWS entregam, num único fornecedor, banco, worker de longa duração, arquivos e serviço de chaves em São Paulo. Render, Railway e R2 não têm região no Brasil. O App Runner da AWS fechou para novos clientes | **Google Cloud em São Paulo** (seção 3.3) |
 | LGPD | Cláusulas-padrão da ANPD obrigatórias para transferência internacional desde 23/08/2025 | Entra na revisão jurídica (H13) e no ADR 002 |
+| Verso atual | NestJS, Prisma e React numa VPS da Hostinger. Um banco compartilhado, sem segurança por linha. Clube sem gateway. Página pública sem código de verificação. Oito problemas de segurança e de dados (inventário, seção 4) | Referência de funcionalidades e regras (E7). Os problemas viram critérios de aceite das etapas correspondentes: trava de horário no banco (2a), comissão fechada imutável (2c), código na página pública (7), adesão só depois do pagamento (5) |
 
 **Pesquisas que ficam para a execução da Etapa 0:**
 1. Política vigente da Meta sobre IA no WhatsApp (4.21.2 item 3).
@@ -289,6 +306,7 @@ Para que eu leia as fontes oficiais direto, vale liberar os domínios acima nas 
 2. O teste técnico mostra as três provas passando, com o resultado registrado no ADR correspondente.
 3. Você aprovou o protótipo da navegação, ou os ajustes viraram itens da Etapa 1.
 4. O perfil 0.2 está preenchido, sem nenhum "a confirmar".
+5. O desenho da migração cobre todas as tabelas do Verso atual com dados reais, e cada funcionalidade do inventário tem um lugar no Verso novo (V20).
 
 ---
 
@@ -520,8 +538,8 @@ Cada etapa ganha um plano detalhado quando chegar a vez dela, com a pesquisa das
 | Etapa | Entrega (resumo) | Depende de | Precisa de você antes | Tamanho |
 | --- | --- | --- | --- | --- |
 | 2a | Configurações da barbearia e funcionamento (feriados), catálogo de serviços e produtos, clientes e dependentes (com a tela de mesclagem), agenda completa (estados calculados, trava no banco, recorrência fixa, tempo real) | 1 | — | G |
-| 2b | Caixa e comanda, pacotes, estoque. **Piloto fechado** (V14) | 2a | Barbearias do piloto fechado | G |
-| 2c | Financeiro e DRE, comissão, vales e fechamento, relatórios e dashboard, notificações internas, importação e exportação | 2b | — | G |
+| 2b | Caixa e comanda, pacotes, estoque | 2a | — | G |
+| 2c | Financeiro e DRE, comissão, vales e fechamento, relatórios e dashboard (incluindo Performance e Ticket médio), **Preços e metas** (V20), notificações internas, importação e exportação | 2b | — | G |
 | 2d | Papéis personalizados, aprovações, delegação, relatório "quem pode fazer o quê" | 1 (paralela à 2a–2c) | — | M |
 | 3 | Plano do Verso e cobrança das barbearias (Asaas do Verso), régua de inadimplência, onboarding self-service e checklist, back-office | 1 | D12 (planos e preços), régua 4.29.3, H9 | G |
 | 4 | Asaas: conexão, webhooks com idempotência e fila, reconsulta, "para revisar", taxas no financeiro, Pix dinâmico no caixa | 1, 2b | D6, H9 | M |
@@ -532,14 +550,15 @@ Cada etapa ganha um plano detalhado quando chegar a vez dela, com a pesquisa das
 | 9 | Ciclo de corte, RFV, ficha calculada, campanhas, pós-atendimento e avaliação sem filtro | 6 | P2 | G |
 | 10 | Rateio do clube no fechamento e ficha técnica | 2c, 5 | Rateio padrão (10.4) | M |
 | 11 | Verso IA: fundação e Gestor, créditos e chave própria, 12 camadas, conjunto de avaliação, custo por barbearia | 2, 5, 6, 8, 9, 10 (V13) | D11, H12 | GG |
-| 12 | Recepção no WhatsApp, piloto | 11, 5, 8 | Barbearias piloto | GG |
+| 12 | Recepção no WhatsApp, com liberação gradual (camada 12) | 11, 5, 8 | Primeiras barbearias da IA | GG |
 | 13 | Escala: partições, filas com justiça, disjuntores, teste de carga | 12 | Metas 4.34 | G |
+| **M** | **Migração e virada das barbearias atuais**: importação dos dados do Verso atual (barbearias, equipe e acessos, clientes, serviços e comissões por serviço, agendamentos, caixa e fluxo, comissões, estoque, preços, metas e despesas, assinaturas do clube como legado), mesclagem de duplicados, relatório de impacto das métricas (V21), ensaio com cópia anonimizada, virada por barbearia com redirecionamento das URLs antigas e aviso dentro do produto | 2, 3, 6, 7 | H17, H18 | G |
 | 14 | Onda 2 | Conforme item | — | — |
 | 15 | Onda 3 | Conforme item | — | — |
 
 **Marcos:**
-- Piloto fechado: após a 2b.
-- Primeira venda (plano Essencial): após 2, 3, 4, 6 e 7.
+- Virada das barbearias atuais: após 2, 3, 6, 7 e M. É quando o Verso novo cobre tudo o que elas usam hoje (V20), inclusive página pública e lembretes.
+- Primeira venda do Verso novo (plano Essencial): junto com a virada, ou logo depois, com a Etapa 4.
 - Diferenciais à venda (Pro): após 5, 8, 9 e 10.
 - Verso IA: após 11 e 12.
 
@@ -547,7 +566,7 @@ Cada etapa ganha um plano detalhado quando chegar a vez dela, com a pesquisa das
 
 ## 7. Próximos passos
 
-1. Você responde às perguntas da seção 1 e valida a matriz de papéis. Pode ser direto aqui no chat, item por item.
-2. Você resolve H2 a H7, ou me diz qual caminho prefere em cada um.
+1. Você decide H2 (hospedagem), H4 (e-mail) e H7 (GitHub), e libera o dump do H17.
+2. Você responde às duas perguntas da pesquisa (seção 5.3): alerta de contatos e PIN no balcão.
 3. Com o plano aprovado, executo a Etapa 0 e trago os ADRs, o resultado do teste técnico e o protótipo de navegação para você aprovar.
 4. Aprovada a Etapa 0, começo a Etapa 1 pelo PR 1a.
