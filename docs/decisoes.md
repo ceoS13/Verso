@@ -14,6 +14,31 @@ Status: **Aberta** (precisa do Pedro) · **Decidida** · **Para o plano** (entra
 | E2 | 05/11/2026 | A stack técnica é proposta pelo agente no plano da Etapa 0 e aprovada pelo Pedro antes de qualquer código. Linha inicial: TypeScript em tudo, Next.js (painel, página pública e PWA), API e workers em Node, PostgreSQL (RLS, restrição de exclusão contra horário duplicado, particionamento) e Redis para filas. |
 | E3 | 05/11/2026 | O código fica no repositório `ceoS13/verso` (GitHub), branch padrão `main`. |
 | E4 | 05/11/2026 | Plano no formato 10.3 com as Etapas 0 e 1 detalhadas. As Etapas 2 a 15 ficam em alto nível e cada uma é detalhada, com pesquisa das referências, quando chegar a vez dela. |
+| E5 | 05/11/2026 | Divergências V2 a V16 do plano v1 **aceitas como propostas**. O Pedro pediu "arruma as divergências". Ajustes por causa de E7: V5 (a tela de mesclagem entra junto com a migração dos dados atuais), V14 (o piloto fechado sai de barbearias que já usam o Verso atual) e a parte de identidade visual de V4 (substituída por E8). |
+| E6 | 05/11/2026 | **O Pedro é o revisor humano** dos PRs sensíveis (H6): login, permissões, isolamento, pagamentos, webhooks e IA. Cada PR sensível traz um roteiro de revisão em linguagem simples: o que mudou, o que conferir e a prova dos testes. |
+| E7 | 05/11/2026 | **Existe um Verso atual, em produção:** `sauleromorales/Verso-Studio`, no ar em versostudio.com.br. O sistema novo é uma reconstrução que **usa o atual como referência e pode mudar tudo**. Isso refina E1: o código não é reaproveitado, mas o que existe hoje (funcionalidades, regras e dados das barbearias) entra no plano. Inventário do sistema atual em `docs/inventario-verso-atual.md`. |
+| E8 | 05/11/2026 | **Design no estilo Apple**, inspirado nas Human Interface Guidelines. Substitui o "tema escuro com destaque âmbar" do perfil 0.2 e da 8.8 do PRD. Proposta de aplicação na seção "Identidade visual" abaixo. Continuam valendo as regras de UX da seção 8 do PRD: uma ação por tela, cliques, estados, acessibilidade AA. |
+
+---
+
+## Identidade visual no estilo Apple (E8): proposta de aplicação
+
+O que "estilo Apple" quer dizer no Verso. Isto vira o ADR 008 e os tokens da Etapa 1.
+
+1. **Claro e escuro seguindo o aparelho**, como nos apps da Apple, com opção de fixar um dos dois em "Minha conta". O PRD previa só o tema escuro no painel. A página pública e o portal seguem o mesmo esquema, usando a cor da barbearia.
+2. **Hierarquia pela tipografia, não pela cor.** Fonte do sistema (`system-ui`): aparece como SF Pro no iPhone e no Mac, e como a fonte nativa no Android e no Windows. Títulos grandes e números tabulares. Escala de 5 tamanhos (8.8).
+3. **Muito respiro, poucas bordas.** Fundo neutro, conteúdo em cartões e listas agrupadas no estilo dos Ajustes do iPhone, cantos arredondados contínuos, separadores finos. Sombra só para o que flutua.
+4. **Uma cor de destaque só: o laranja da marca**, usado como cor de ação ("tint"): botões principais, seleção, links e foco. As cores de estado (sucesso, atenção, erro, informação) seguem a paleta de sistema da Apple, e o estado do agendamento sempre aparece com texto junto (8.5).
+5. **Materiais translúcidos com parcimônia.** Vidro fosco só nas barras fixas (barra lateral, barra de abas, cabeçalho ao rolar), nunca atrás de texto longo. Respeita a opção "reduzir transparência".
+6. **Componentes com cara de iOS e macOS:**
+   - no celular: barra de abas embaixo, formulários em painéis que sobem de baixo ("sheets"), botões grandes, alvos de 44 px;
+   - no desktop: barra lateral, painel lateral para formulários, seletor segmentado para Dia, Semana e Lista;
+   - em todos: confirmações curtas, com o botão nomeado pela ação.
+7. **Movimento suave**, com animações de mola entre 150 e 250 ms. Respeita "reduzir movimento".
+8. **Ícones** lineares e consistentes. A licença dos SF Symbols proíbe o uso na web, então a base é o Lucide, que o Verso atual já usa, em traço fino.
+9. **O PRD continua valendo**: contraste AA, estados padrão, limite de cliques, desempenho e texto sempre com cor.
+
+Pendente: cor exata do laranja e arquivo do logo, a partir do inventário do Verso atual (pasta `studio/` com os favicons).
 
 ---
 
