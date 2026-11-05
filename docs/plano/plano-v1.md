@@ -328,7 +328,31 @@ Todas com `organizacao_id`, exceto as marcadas como globais. Também têm `criad
 
 ### 5.3 Fontes pesquisadas e decisão
 
-<<FONTES_ETAPA1>>
+Pesquisa de 05/11/2026 sobre como as referências fazem hoje os temas desta etapa. As páginas de ajuda da Booksy (support.booksy.com) e da Fresha (fresha.com) foram bloqueadas pela política de rede deste ambiente. Para elas, usei os trechos das páginas oficiais que a busca devolve. AppBarber, BestBarbers, Belasis e Space Barber publicam pouca documentação.
+
+| Tema | O que as referências fazem | Decisão para o Verso | Motivo |
+| --- | --- | --- | --- |
+| Papéis e permissões | Booksy: 5 níveis fixos, com poucos ajustes. Fresha: papéis personalizados com permissão por ação ("baixar clientes", "responder conversas", "ver dados de toda a equipe"). Trinks: perfis padrão mais grupos personalizados (desde ago/2025), com colunas separadas para ver telefone, e-mail e CPF; a mudança de perfil leva até 10 minutos para valer. SQUIRE: liga e desliga permissões por barbeiro. theCut: só dono e barbeiro. **Nenhuma referência tem limite de valor nem aprovação acima do limite.** | **Melhorar** | O modelo do PRD já é o mais completo do mercado. Dois ajustes da pesquisa: (1) a permissão retirada vale **na hora**, nunca com atraso como no Trinks, porque o avaliador lê as atribuições a cada requisição; (2) mantenho uma só permissão de contato, `clientes.ver_contato`, porque o Verso não guarda CPF de cliente |
+| Exposição de contatos | Booksy: quem cadastra o contato não volta a vê-lo, e há um alerta quando alguém abre muitos contatos em pouco tempo | **Copiar o alerta (proposta para a Etapa 2a)** | Protege a base da barbearia contra quem sai levando a lista. Pergunta abaixo |
+| Comissão do barbeiro | Fresha: cada membro vê o próprio extrato. Booksy: o barbeiro não vê comissão, e o dono manda o relatório. BestBarbers: só no plano pago | **Copiar a Fresha** | Já está na matriz: `comissoes.ver` no escopo Próprio para Barbeiro e Barbeiro parceiro |
+| 2FA | Ninguém exige. SQUIRE anunciou "em breve" (abr/2025). Booksy só recomenda MFA no e-mail. Trinks pede token por SMS só na conta digital. Fresha pede código por SMS ou e-mail em ações sensíveis | **Manter o PRD** (2FA obrigatório para papéis com permissão perigosa, V8) | Sai à frente do mercado sem custo de uso, com app autenticador e passkey |
+| PIN no balcão | Fresha: PIN individual para trocar de usuário no mesmo aparelho, com bloqueio por inatividade ou após cada checkout | **Copiar (proposta para a Etapa 2b)** | Na recepção, várias pessoas usam o mesmo tablet. Sem troca rápida, todo mundo usa o login do dono, e a auditoria e as permissões perdem o sentido. Pergunta abaixo |
+| Auditoria | Fresha: logs pontuais (não registra mudança de salário). Trinks: registra quem editou a ficha. Avec: cita logs na política, sem tela para o dono | **Melhorar** | Log único, imutável e visível ao Dono, cobrindo permissões, comissões e dinheiro (4.26.11) |
+| Multi-unidade | SQUIRE: marca > loja > barbeiro, configuração "igual para todas ou por loja", bloqueio de cliente na marca ou só na loja. Fresha: unidades num mesmo espaço, serviço marcado por unidade, seletor no calendário, permissões por membro (não por unidade). Trinks: cada unidade é um estabelecimento separado, cliente achado na rede por CPF ou e-mail, consolidado como estabelecimento à parte. Booksy e Avec: uma conta por endereço | **Copiar SQUIRE e Fresha, descartar o resto** | O modelo organização > unidade com cliente único na rede (4.31.1) bate com o melhor do mercado, e o escopo por unidade supera a Fresha. Para a Etapa 6: bloqueio de número na organização ou só na unidade (SQUIRE) |
+| Acesso do suporte | **Ninguém** documenta "conceder acesso ao suporte" com prazo. A SQUIRE mexe direto na conta do cliente no onboarding. A Fresha gera um código temporário para confirmar a identidade do dono numa ligação | **Manter o PRD e copiar o código da Fresha (Etapa 3)** | O acesso com prazo, autorizado e auditado (4.26.7) é diferencial. O código de identidade evita golpe de alguém se passando pelo dono no suporte |
+| Planos e inadimplência do software (insumo para a Etapa 3) | Cobrança por profissional: Booksy (US$ 29,99 + US$ 20 por membro), Fresha (por membro com agenda ativa). Por faixa de profissionais: AppBarber (R$ 79,90 a R$ 219,90), Trinks, Avec. Por loja: SQUIRE (US$ 50 a US$ 150). theCut: cada barbeiro paga o próprio. Atraso no Trinks: "Atrasada", nova tentativa diária e depois "Suspensa", com desbloqueio imediato via Pix. Atraso na Fresha: pausa o acesso todo. Atraso no theCut: a barbearia some da busca | **Para a Etapa 3 (D12)** | Confirma a régua gradual da 4.29.3, que protege o cliente final, contra a pausa total da Fresha. Na 3, comparo por profissional ativo e por faixa |
+
+Fontes principais:
+- SQUIRE: [permissões do barbeiro](https://help.getsquire.com/s/article/Understanding-Commission-Rental-Barber-Permissions), [contas de marca](https://help.getsquire.com/s/article/Barber-Management-for-brand-accounts), [preços](https://getsquire.com/pricing)
+- Booksy: [níveis de acesso](https://support.booksy.com/hc/en-us/articles/16535688940946), [contato do cliente](https://support.booksy.com/hc/en-us/articles/16540105025298)
+- Fresha: [papéis](https://www.fresha.com/help-center/knowledge-base/team/100687-create-permission-roles), [troca por PIN](https://www.fresha.com/help-center/knowledge-base/personal-account/234-set-up-and-manage-pin-switching), [unidades](https://www.fresha.com/help-center/knowledge-base/workspace-settings/42-create-and-manage-business-locations)
+- Trinks: [perfil de acesso](https://ajuda.trinks.com/perfil-de-acesso-do-profissional), [novidades 2025](https://ajuda.trinks.com/novidades-2025), [novidades 2026](https://ajuda.trinks.com/novidades-2026), [cliente em rede](https://ajuda.trinks.com/historico-de-cliente-em-rede)
+- theCut: [funções do dono](https://thecut.co/owner-features)
+- AppBarber: [funcionalidades](https://www.appbarber.com.br/funcionalidades/)
+
+**Perguntas que a pesquisa levantou:**
+1. **Alerta de contatos (Etapa 2a).** Quer que o Dono seja avisado quando alguém da equipe abrir muitos contatos de clientes em pouco tempo?
+2. **Troca de usuário por PIN no balcão (Etapa 2b).** Quer o tablet da recepção compartilhado, com cada pessoa entrando com o próprio PIN e bloqueio após inatividade? Isso não está no PRD.
 
 ### 5.4 Riscos
 
