@@ -1,5 +1,7 @@
 # Verso 2.0: guia do agente
 
+> **Arquivado em 05/11/2026 (decisão E11).** O Verso 2.0 passou a ser feito evoluindo o repositório `sauleromorales/Verso-Studio`, em produção. A documentação vigente (PRD, decisões, inventário, problemas conhecidos e matriz de papéis) está em `docs/verso-2.0/` daquele repositório. Este repositório guarda só o plano v1, escrito quando o projeto ainda era uma reconstrução do zero.
+
 Sistema de gestão para barbearias (SaaS com vários clientes), construído do zero.
 Quem decide produto: **Pedro Otávio**.
 
