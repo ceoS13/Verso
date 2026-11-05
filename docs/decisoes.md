@@ -12,7 +12,7 @@ Status: **Aberta** (precisa do Pedro) · **Decidida** · **Para o plano** (entra
 | --- | --- | --- |
 | E1 | 05/11/2026 | O projeto é **do zero**, sem código anterior. A proposta de P1 está aprovada. |
 | E2 | 05/11/2026 | A stack técnica é proposta pelo agente no plano da Etapa 0 e aprovada pelo Pedro antes de qualquer código. Linha inicial: TypeScript em tudo, Next.js (painel, página pública e PWA), API e workers em Node, PostgreSQL (RLS, restrição de exclusão contra horário duplicado, particionamento) e Redis para filas. |
-| E3 | 05/11/2026 | O código fica num repositório no GitHub que o Pedro vai criar e passar (pendente: nome do repositório). |
+| E3 | 05/11/2026 | O código fica no repositório `ceoS13/verso` (GitHub), branch padrão `main`. |
 | E4 | 05/11/2026 | Plano no formato 10.3 com as Etapas 0 e 1 detalhadas. As Etapas 2 a 15 ficam em alto nível e cada uma é detalhada, com pesquisa das referências, quando chegar a vez dela. |
 
 ---
